@@ -1,0 +1,19 @@
+{
+  "name": "beda3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "dev": "node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1",
+    "multer": "^2.1.0",
+    "mysql2": "^3.18.2",
+    "uuid": "^13.0.0"
+  }
+}

@@ -1,0 +1,11 @@
+const express = require("express");
+const router = express.Router();
+const showtimeController = require("../controllers/showtime.controller");
+router.get("/all", showtimeController.getAllShowtimes);
+router.get("/:id", showtimeController.getShowtimeById);
+router.get("/movie/:movie_id", showtimeController.getShowtimesByMovieId);
+router.get("/search", showtimeController.getShowtimesByShowDateAndMovie);
+router.post("/create", showtimeController.createShowtime);
+router.put("/update/:id", showtimeController.updateShowtime);
+router.delete("/delete/:id", showtimeController.deleteShowtime);
+module.exports = router;
