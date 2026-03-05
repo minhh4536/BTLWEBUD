@@ -7,4 +7,5 @@ router.get("/search", theaterController.getTheaterByName);
 router.post("/create", theaterController.createTheater);
 router.put("/update/:id", theaterController.updateTheater);
 router.delete("/delete/:id", theaterController.deleteTheater);
+
 module.exports = router;

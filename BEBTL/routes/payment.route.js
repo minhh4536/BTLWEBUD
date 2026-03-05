@@ -7,4 +7,5 @@ router.get("/all", paymentController.getAllPayments);
 router.get("/:id", paymentController.getPaymentById);
 router.put("/update/:id", paymentController.updatePayment);
 router.delete("/delete/:id", paymentController.deletePayment);
+
 module.exports = router;

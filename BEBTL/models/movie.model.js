@@ -112,4 +112,8 @@ module.exports = {
   getMovieById,
   getMoviesByTitle,
   updateMovie,
+  deleteMovie,
+  getMoviesByGenre,
+  getMoviesByDirector,
+  getMoviesByActor,
 };

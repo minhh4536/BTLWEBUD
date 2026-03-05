@@ -9,4 +9,5 @@ router.get("/showtime/:showtime_id", seatController.getALLSeatsByShowtimeId);
 router.post("/create", seatController.createSeat);
 router.put("/update/:id", seatController.updateSeat);
 router.delete("/delete/:id", seatController.deleteSeat);
+
 module.exports = router;

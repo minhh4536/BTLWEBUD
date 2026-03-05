@@ -8,4 +8,5 @@ router.get("/search", showtimeController.getShowtimesByShowDateAndMovie);
 router.post("/create", showtimeController.createShowtime);
 router.put("/update/:id", showtimeController.updateShowtime);
 router.delete("/delete/:id", showtimeController.deleteShowtime);
+
 module.exports = router;

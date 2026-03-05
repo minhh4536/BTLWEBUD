@@ -15,4 +15,7 @@ router.get(
   movieController.getMoviesByReleaseDate,
 );
 router.get("/title/:title", movieController.getMoviesByTitle);
+router.get("/director/:director", movieController.getMoviesByDirector);
+router.get("/actor/:actor", movieController.getMoviesByActor);
+
 module.exports = router;
