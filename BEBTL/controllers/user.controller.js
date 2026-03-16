@@ -1,4 +1,5 @@
 const userModel = require("../models/user.model");
+const bcrypt = require("bcrypt");
 
 async function getAllUsers(req, res) {
   try {
@@ -43,7 +44,8 @@ async function createUser(req, res) {
         .status(400)
         .json({ message: "Username and password are required" });
     }
-    const result = await userModel.createUser(username, password);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await userModel.createUser(username, hashedPassword);
     res.status(201).json({ message: "User created successfully", result });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -63,8 +65,14 @@ async function deleteUser(req, res) {
 async function updateUser(req, res) {
   try {
     const id = req.params.id;
-    const { username, password } = req.body;
-    const result = await userModel.updateUser(id, username, password);
+    const { username, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await userModel.updateUser(
+      id,
+      username,
+      email,
+      hashedPassword,
+    );
     res.json({ message: "User updated successfully", result });
   } catch (error) {
     res.status(500).json({ message: error.message });
