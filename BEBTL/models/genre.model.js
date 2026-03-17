@@ -14,7 +14,9 @@ async function getAllGenres() {
 }
 
 async function getGenreById(id) {
-  const [rows] = await db.execute("SELECT * FROM genres WHERE id = ?", [id]);
+  const [rows] = await db.execute("SELECT * FROM genres WHERE genre_id = ?", [
+    id,
+  ]);
   return rows[0];
 }
 
@@ -28,14 +30,16 @@ async function getGenreByName(genre_name) {
 
 async function updateGenre(id, genre_name) {
   const [result] = await db.execute(
-    "UPDATE genres SET genre_name = ? WHERE id = ?",
+    "UPDATE genres SET genre_name = ? WHERE genre_id = ?",
     [genre_name, id],
   );
   return result;
 }
 
 async function deleteGenre(id) {
-  const [result] = await db.execute("DELETE FROM genres WHERE id = ?", [id]);
+  const [result] = await db.execute("DELETE FROM genres WHERE genre_id = ?", [
+    id,
+  ]);
   return result;
 }
 

@@ -23,7 +23,7 @@ export default function RootLayout({
           <nav className="navbar navbar-expand-lg bg-body-tertiary">
             <div className="container-fluid">
               <a className="navbar-brand" href="/home">
-                <img src="/cgvlogo.png" alt="Logo" />
+                <img src="cgvlogo.png" alt="Logo" />
               </a>
               <button
                 className="navbar-toggler"

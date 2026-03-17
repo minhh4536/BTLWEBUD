@@ -1,6 +1,22 @@
 .dropdown-item:hover {
   background-color: #3a3e4250;
 }
+.admin-btnmenu:hover {
+  background-color: #71717250;
+  border: 1px solid #3a3e4250;
+  border-radius: 10px;
+}
 .carousel-item img {
   object-fit: cover;
+  height: 670px;
+}
+/* file globals.css hoặc style module */
+.pagination .page-item.active .page-link {
+  background-color: #6c757d; /* màu secondary */
+  border-color: #6c757d;
+  color: white;
+}
+
+.pagination .page-link {
+  color: #6c757d; /* màu chữ mặc định cho các nút chưa active */
 }

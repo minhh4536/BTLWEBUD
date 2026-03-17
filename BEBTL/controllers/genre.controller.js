@@ -9,10 +9,10 @@ async function getAllGenres(req, res) {
   }
 }
 
-async function getGenreById(req, res) {
+async function getGenreByName(req, res) {
   try {
-    const { id } = req.params;
-    const genre = await genreModel.getGenreById(id);
+    const { name } = req.params;
+    const genre = await genreModel.getGenreByName(name);
     if (!genre) {
       return res.status(404).json({ message: "Genre not found" });
     }
@@ -61,7 +61,7 @@ async function deleteGenre(req, res) {
 
 module.exports = {
   getAllGenres,
-  getGenreById,
+  getGenreByName,
   createGenre,
   updateGenre,
   deleteGenre,

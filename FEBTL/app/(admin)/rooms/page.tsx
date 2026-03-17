@@ -1,6 +1,6 @@
 export default function AdminRooms() {
   return (
-    <div>
+    <div className="container">
       <h1>Admin Rooms</h1>
     </div>
   );

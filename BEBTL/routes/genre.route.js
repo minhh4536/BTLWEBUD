@@ -4,8 +4,7 @@ const genreController = require("../controllers/genre.controller");
 
 router.post("/create", genreController.createGenre);
 router.get("/", genreController.getAllGenres);
-router.get("/:id", genreController.getGenreById);
 router.put("/:id", genreController.updateGenre);
 router.delete("/:id", genreController.deleteGenre);
-
+router.get("/search/:name", genreController.getGenreByName);
 module.exports = router;
