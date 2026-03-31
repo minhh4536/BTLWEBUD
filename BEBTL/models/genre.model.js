@@ -1,53 +1,47 @@
 const db = require("../common/db");
 
-async function createGenre(genre_name) {
-  const [result] = await db.execute(
-    "INSERT INTO genres (genre_name) VALUES (?)",
-    [genre_name],
-  );
-  return result;
-}
+const genreModel = {
+  getAllGenres: async () => {
+    const [rows] = await db.query("SELECT * FROM Genres ORDER BY genre_name");
+    return rows;
+  },
 
-async function getAllGenres() {
-  const [rows] = await db.execute("SELECT * FROM genres");
-  return rows;
-}
+  getGenreById: async (genre_id) => {
+    const [rows] = await db.query("SELECT * FROM Genres WHERE genre_id = ?", [
+      genre_id,
+    ]);
+    return rows[0];
+  },
 
-async function getGenreById(id) {
-  const [rows] = await db.execute("SELECT * FROM genres WHERE genre_id = ?", [
-    id,
-  ]);
-  return rows[0];
-}
+  getGenreByName: async (genre_name) => {
+    const [rows] = await db.query("SELECT * FROM Genres WHERE genre_name = ?", [
+      genre_name,
+    ]);
+    return rows[0];
+  },
 
-async function getGenreByName(genre_name) {
-  const [rows] = await db.execute(
-    "SELECT * FROM genres WHERE genre_name LIKE ?",
-    [`%${genre_name}%`],
-  );
-  return rows;
-}
+  createGenre: async (genre_name) => {
+    const [result] = await db.query(
+      "INSERT INTO Genres (genre_name) VALUES (?)",
+      [genre_name],
+    );
+    return result;
+  },
 
-async function updateGenre(id, genre_name) {
-  const [result] = await db.execute(
-    "UPDATE genres SET genre_name = ? WHERE genre_id = ?",
-    [genre_name, id],
-  );
-  return result;
-}
+  updateGenre: async (genre_id, genre_name) => {
+    const [result] = await db.query(
+      "UPDATE Genres SET genre_name = ? WHERE genre_id = ?",
+      [genre_name, genre_id],
+    );
+    return result;
+  },
 
-async function deleteGenre(id) {
-  const [result] = await db.execute("DELETE FROM genres WHERE genre_id = ?", [
-    id,
-  ]);
-  return result;
-}
-
-module.exports = {
-  createGenre,
-  getAllGenres,
-  getGenreById,
-  updateGenre,
-  deleteGenre,
-  getGenreByName,
+  deleteGenre: async (genre_id) => {
+    const [result] = await db.query("DELETE FROM Genres WHERE genre_id = ?", [
+      genre_id,
+    ]);
+    return result;
+  },
 };
+
+module.exports = genreModel;

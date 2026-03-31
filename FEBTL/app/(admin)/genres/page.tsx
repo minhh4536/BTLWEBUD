@@ -2,7 +2,7 @@ import GenreTable from "@/components/genresadmincomponent";
 
 export default function Genres() {
   return (
-    <div className="container">
+    <div className="m-2">
       <h1>Genres</h1>
       <nav aria-label="breadcrumb">
         <ol className="breadcrumb">

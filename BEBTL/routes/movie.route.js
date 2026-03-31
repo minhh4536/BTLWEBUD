@@ -1,16 +1,34 @@
-const upload = require("../common/upload");
 const express = require("express");
 const router = express.Router();
 const movieController = require("../controllers/movie.controller");
+const upload = require("../common/upload"); // ← Đường dẫn đến file multer config của bạn
+const { verifyToken, checkRole } = require("../middlewares/auth.middleware");
 
-router.post("/create", upload.single("poster"), movieController.createMovie);
-router.get("/all", movieController.getAllMovies);
+// Create movie với upload poster
+router.post(
+  "/",
+  verifyToken,
+  checkRole(["admin"]),
+  upload.single("poster"),
+  movieController.createMovie,
+);
+
+// Update movie với upload poster (nếu có file mới)
+router.put(
+  "/:id",
+  verifyToken,
+  checkRole(["admin"]),
+  upload.single("poster"),
+  movieController.updateMovie,
+);
+
+router.get("/", movieController.getAllMovies);
 router.get("/:id", movieController.getMovieById);
-router.put("/update/:id", upload.single("poster"), movieController.updateMovie);
-router.delete("/delete/:id", movieController.deleteMovie);
-router.get("/genre/:genre_id", movieController.getMoviesByGenre);
-router.get("/title/:title", movieController.getMoviesByTitle);
-router.get("/director/:director", movieController.getMoviesByDirector);
-router.get("/actor/:actor", movieController.getMoviesByActor);
+router.delete(
+  "/:id",
+  verifyToken,
+  checkRole(["admin"]),
+  movieController.deleteMovie,
+);
 
 module.exports = router;

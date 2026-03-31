@@ -1,7 +1,14 @@
-"use client"; //sử dụng client
+"use client";
 import { error } from "console";
-import { useEffect, useState } from "react"; //import
-//khai báo Genre
+import { useEffect, useState } from "react";
+import {
+  getAllGenres,
+  createGenre,
+  updateGenre,
+  deleteGenre,
+  searchGenre,
+} from "@/services/genreService";
+
 type Genre = {
   id: number;
   name: string;
@@ -9,24 +16,20 @@ type Genre = {
 };
 
 export default function GenreTable() {
-  //Khai báo State
   const [genres, setGenres] = useState<Genre[]>([]);
   const [loading, setLoading] = useState(true);
-  // Pagination
+
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10);
-  //edit genre
+
   const [editingGenre, setEditingGenre] = useState<Genre | null>(null);
   const [editName, setEditName] = useState("");
-  //add genre
+
   const [addingGenre, setAddingGenre] = useState("");
-  //search genre
   const [searchText, setSearchText] = useState("");
-  //--------------------------------------------------------------------------------------------------------------------------
-  //Hàm gọi đến api getall----------------------------------------------------------------------------------
+
   useEffect(() => {
-    fetch("http://localhost:3000/genres/")
-      .then((res) => res.json())
+    getAllGenres()
       .then((data) => {
         const formatted = data.map((u: any) => ({
           id: u.genre_id,
@@ -35,30 +38,21 @@ export default function GenreTable() {
         }));
         setGenres(formatted);
         setLoading(false);
+      })
+      .catch((err) => {
+        console.error("ERROR:", err);
+        alert("Error loading genres");
       });
   }, []);
 
   if (loading) return <p>Loading...</p>;
 
-  //hàm gọi đến api editgenre----------------------------------------------------------------------------
   const handleSave = async () => {
     if (!editingGenre) return;
 
     try {
-      const res = await fetch(
-        `http://localhost:3000/genres/${editingGenre.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ name: editName }),
-        },
-      );
+      await updateGenre(editingGenre.id, editName);
 
-      if (!res.ok) throw new Error("Update failed");
-
-      // Cập nhật state genres để bảng tự refresh--------------------------------------------------------------------------------
       setGenres((prev) =>
         prev.map((g) =>
           g.id === editingGenre.id ? { ...g, name: editName } : g,
@@ -70,23 +64,12 @@ export default function GenreTable() {
       alert("Error updating genre");
     }
   };
-  //end
-  //HÀM THÊM GENRE
+
   const handleAdd = async () => {
     if (!addingGenre) return;
     try {
-      const res = await fetch(`http://localhost:3000/genres/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: addingGenre }),
-      });
-      if (!res.ok) throw new Error("Update failed");
+      const data = await createGenre(addingGenre);
 
-      const data = await res.json();
-
-      console.log(data);
       setGenres((prev) => [
         ...prev,
         {
@@ -102,15 +85,11 @@ export default function GenreTable() {
       alert("Error addding genre");
     }
   };
-  //HÀM XÓA GENRE
+
   const handleDelete = async (id: number) => {
     if (!id) return;
     try {
-      const res = await fetch(`http://localhost:3000/genres/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Delete failed");
+      await deleteGenre(id);
 
       setGenres((prev) => prev.filter((g) => g.id !== id));
 
@@ -119,33 +98,29 @@ export default function GenreTable() {
       alert("Error deleting genre");
     }
   };
-  //HÀM TÌM KIẾM GENRE
+
   const seach = async (name: string) => {
     if (!name) return;
     try {
-      const res = await fetch(`http://localhost:3000/genres/search/${name}`, {
-        method: "GET",
-      });
-      if (!res.ok) throw new Error("Search fail");
-      const data = await res.json();
-      // map lại để có id/name/createdAt
+      const data = await searchGenre(name);
+
       const formatted = data.map((u: any) => ({
         id: u.genre_id,
         name: u.genre_name,
         createdAt: u.created_at,
       }));
+
       setGenres(formatted);
     } catch (err) {
       alert("Error searching genre");
     }
   };
-  // Tính dữ liệu hiển thị----------------------------------------------------
+
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentGenres = genres.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(genres.length / recordsPerPage);
-  //end
-  //hiển thị
+
   return (
     <>
       <div className="d-flex">
@@ -213,6 +188,7 @@ export default function GenreTable() {
           </div>
         </div>
       </div>
+
       <div className="rounder rounder-10 mt-3">
         <div className="d-flex">
           <h6 className="m-0 d-none d-lg-block">All Genres</h6>
@@ -233,6 +209,7 @@ export default function GenreTable() {
           </div>
         </div>
       </div>
+
       <table className="table">
         <thead>
           <tr className="table-secondary">
@@ -258,6 +235,7 @@ export default function GenreTable() {
                   >
                     <i className="fa-solid fa-ellipsis"></i>
                   </button>
+
                   <ul className="dropdown-menu">
                     <li>
                       <button
@@ -266,24 +244,24 @@ export default function GenreTable() {
                         data-bs-toggle="modal"
                         data-bs-target="#exampleModal"
                         onClick={() => {
-                          setEditingGenre(genre); // set genre đang edit
-                          setEditName(genre.name); // set giá trị input
+                          setEditingGenre(genre);
+                          setEditName(genre.name);
                         }}
                       >
                         Edit
                       </button>
                     </li>
+
                     <li>
                       <button
                         type="button"
                         className="dropdown-item"
-                        onClick={() => {
-                          handleDelete(genre.id);
-                        }}
+                        onClick={() => handleDelete(genre.id)}
                       >
                         Delete
                       </button>
                     </li>
+
                     <li>
                       <button type="button" className="dropdown-item">
                         Cancel
@@ -291,7 +269,6 @@ export default function GenreTable() {
                     </li>
                   </ul>
 
-                  {/* Modal */}
                   <div
                     className="modal fade"
                     id="exampleModal"
@@ -302,19 +279,14 @@ export default function GenreTable() {
                     <div className="modal-dialog modal-dialog-centered">
                       <div className="modal-content">
                         <div className="modal-header">
-                          <h1
-                            className="modal-title fs-5"
-                            id="exampleModalLabel"
-                          >
-                            Edit Genre
-                          </h1>
+                          <h1 className="modal-title fs-5">Edit Genre</h1>
                           <button
                             type="button"
                             className="btn-close"
                             data-bs-dismiss="modal"
-                            aria-label="Close"
                           ></button>
                         </div>
+
                         <div className="modal-body">
                           <h6>Genre Name</h6>
                           <input
@@ -324,6 +296,7 @@ export default function GenreTable() {
                             onChange={(e) => setEditName(e.target.value)}
                           />
                         </div>
+
                         <div className="modal-footer">
                           <button
                             type="button"
@@ -350,14 +323,13 @@ export default function GenreTable() {
           ))}
         </tbody>
       </table>
+
       <div className="bottom-table d-flex align-items-center">
-        {/* 1-10 / 100 */}
         <div className="me-auto d-none d-lg-block">
           {indexOfFirstRecord + 1}-{Math.min(indexOfLastRecord, genres.length)}{" "}
           / {genres.length}
         </div>
 
-        {/* Records per page */}
         <div className="d-flex mx-auto d-none d-lg-flex align-items-center">
           <span>Records per page:</span>
           <div className="dropdown ms-2">
@@ -365,10 +337,10 @@ export default function GenreTable() {
               className="btn dropdown-toggle rounded-pill border border-black"
               type="button"
               data-bs-toggle="dropdown"
-              aria-expanded="false"
             >
               {recordsPerPage}
             </button>
+
             <ul className="dropdown-menu">
               {[5, 10, 20, 50].map((num) => (
                 <li key={num}>
@@ -376,7 +348,7 @@ export default function GenreTable() {
                     className="dropdown-item"
                     onClick={() => {
                       setRecordsPerPage(num);
-                      setCurrentPage(1); // reset trang khi đổi records per page
+                      setCurrentPage(1);
                     }}
                   >
                     {num}
@@ -387,7 +359,6 @@ export default function GenreTable() {
           </div>
         </div>
 
-        {/* Pagination */}
         <div className="ms-auto">
           <nav>
             <ul className="pagination mb-0">
@@ -405,7 +376,9 @@ export default function GenreTable() {
               {Array.from({ length: totalPages }, (_, i) => (
                 <li
                   key={i}
-                  className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                  className={`page-item ${
+                    currentPage === i + 1 ? "active" : ""
+                  }`}
                 >
                   <button
                     className="btn btn-secondary page-link"
@@ -417,7 +390,9 @@ export default function GenreTable() {
               ))}
 
               <li
-                className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+                className={`page-item ${
+                  currentPage === totalPages ? "disabled" : ""
+                }`}
               >
                 <button
                   className="page-link rounded-end-pill"

@@ -3,7 +3,12 @@ const bcrypt = require("bcrypt");
 
 async function getAllUsers(req, res) {
   try {
-    const users = await userModel.getAllUsers();
+    const { search = null, page = 1, limit = 10 } = req.query;
+    const users = await userModel.getAllUsers(
+      search,
+      Number(page),
+      Number(limit),
+    );
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -38,14 +43,14 @@ async function getUserByName(req, res) {
 
 async function createUser(req, res) {
   try {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
     if (username === "" || password === "") {
       return res
         .status(400)
         .json({ message: "Username and password are required" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await userModel.createUser(username, hashedPassword);
+    const result = await userModel.createUser(username, email, hashedPassword);
     res.status(201).json({ message: "User created successfully", result });
   } catch (error) {
     res.status(500).json({ message: error.message });

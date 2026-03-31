@@ -18,7 +18,9 @@ async function createPayment(req, res) {
 
 async function getAllPayments(req, res) {
   try {
-    const payments = await paymentModel.getAllPayments();
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const payments = await paymentModel.getAllPayments(page, limit);
     res.status(200).json(payments);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -56,6 +58,30 @@ async function updatePayment(req, res) {
   }
 }
 
+async function updatePaymentStatus(req, res) {
+  try {
+    const { id } = req.params;
+    const { payment_status } = req.body;
+    const validStatuses = ["success", "failed"];
+
+    if (!validStatuses.includes(payment_status)) {
+      return res.status(400).json({
+        error: "payment_status phải là success hoặc failed",
+      });
+    }
+
+    const result = await paymentModel.updatePaymentStatus(id, payment_status);
+
+    if (!result) {
+      return res.status(404).json({ error: "Payment not found" });
+    }
+
+    res.status(200).json({ message: "Payment status updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
 async function deletePayment(req, res) {
   try {
     const { id } = req.params;
@@ -71,5 +97,6 @@ module.exports = {
   getAllPayments,
   getPaymentById,
   updatePayment,
+  updatePaymentStatus,
   deletePayment,
 };

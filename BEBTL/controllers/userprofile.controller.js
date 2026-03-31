@@ -2,7 +2,14 @@ const userprofileModel = require("../models/userprofile.model");
 
 async function getUserProfileByUserId(req, res) {
   try {
-    const userId = req.params.userId;
+    const userId = Number(req.params.userId);
+
+    if (req.user.role !== "admin" && req.user.userId !== userId) {
+      return res
+        .status(403)
+        .json({ message: "Bạn không có quyền truy cập hồ sơ này" });
+    }
+
     const userProfile = await userprofileModel.getUserProfileByUserId(userId);
     if (!userProfile) {
       return res.status(404).json({ message: "User profile not found" });

@@ -1,68 +1,58 @@
 const genreModel = require("../models/genre.model");
 
-async function getAllGenres(req, res) {
-  try {
-    const genres = await genreModel.getAllGenres();
-    res.json(genres);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-}
-
-async function getGenreByName(req, res) {
-  try {
-    const { name } = req.params;
-    const genre = await genreModel.getGenreByName(name);
-    if (!genre) {
-      return res.status(404).json({ message: "Genre not found" });
+const genreController = {
+  getAllGenres: async (req, res) => {
+    try {
+      const genres = await genreModel.getAllGenres();
+      res.json(genres);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
-    res.json(genre);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-}
+  },
 
-async function createGenre(req, res) {
-  try {
-    const { name } = req.body;
-    if (!name) {
-      return res.status(400).json({ message: "Genre name is required" });
+  getGenreById: async (req, res) => {
+    try {
+      const genre = await genreModel.getGenreById(req.params.id);
+      if (!genre) return res.status(404).json({ message: "Genre not found" });
+      res.json(genre);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
-    const result = await genreModel.createGenre(name);
-    res.status(201).json({ message: "Genre created successfully", result });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-}
+  },
 
-async function updateGenre(req, res) {
-  try {
-    const { id } = req.params;
-    const { name } = req.body;
-    if (!name) {
-      return res.status(400).json({ message: "Genre name is required" });
+  createGenre: async (req, res) => {
+    try {
+      const { genre_name } = req.body;
+      if (!genre_name)
+        return res.status(400).json({ message: "Genre name is required" });
+
+      const result = await genreModel.createGenre(genre_name);
+      res
+        .status(201)
+        .json({ message: "Genre created", genre_id: result.insertId });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
-    const result = await genreModel.updateGenre(id, name);
-    res.json({ message: "Genre updated successfully", result });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-}
+  },
 
-async function deleteGenre(req, res) {
-  try {
-    const { id } = req.params;
-    const result = await genreModel.deleteGenre(id);
-    res.json({ message: "Genre deleted successfully", result });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-}
+  updateGenre: async (req, res) => {
+    try {
+      const { genre_name } = req.body;
+      const result = await genreModel.updateGenre(req.params.id, genre_name);
+      res.json({ message: "Genre updated", result });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
 
-module.exports = {
-  getAllGenres,
-  getGenreByName,
-  createGenre,
-  updateGenre,
-  deleteGenre,
+  deleteGenre: async (req, res) => {
+    try {
+      const result = await genreModel.deleteGenre(req.params.id);
+      res.json({ message: "Genre deleted", result });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
 };
+
+module.exports = genreController;

@@ -1,8 +1,24 @@
 const db = require("../common/db");
 const userProfileModel = require("./userprofile.model");
 
-async function getAllUsers() {
-  const [rows] = await db.query("SELECT * FROM Users");
+async function getAllUsers(search = null, page = 1, limit = 10) {
+  const offset = (page - 1) * limit;
+  const params = [];
+  let query = `
+    SELECT u.user_id, u.username, u.email, u.status, u.created_at, ur.role_name
+    FROM Users u
+    LEFT JOIN UserRoles ur ON u.role_id = ur.role_id
+  `;
+
+  if (search) {
+    query += " WHERE u.username LIKE ? OR u.email LIKE ?";
+    params.push(`%${search}%`, `%${search}%`);
+  }
+
+  query += " ORDER BY u.created_at DESC LIMIT ? OFFSET ?";
+  params.push(limit, offset);
+
+  const [rows] = await db.query(query, params);
   return rows;
 }
 
@@ -28,8 +44,8 @@ async function createUser(username, email, password) {
 }
 
 async function deleteUser(id) {
-  const [result] = await db.query("DELETE FROM Users WHERE user_id = ?", [id]);
   await userProfileModel.deleteUserProfile(id);
+  const [result] = await db.query("DELETE FROM Users WHERE user_id = ?", [id]);
   return result;
 }
 

@@ -2,11 +2,16 @@ const booikingDetailModel = require("../models/bookingdetail.model");
 
 async function createBookingDetail(req, res) {
   try {
-    const { booking_id, seat_id, showtime_id } = req.body;
+    const { booking_id, ticket_id, price } = req.body;
+    if (!booking_id || !ticket_id) {
+      return res
+        .status(400)
+        .json({ error: "booking_id and ticket_id are required" });
+    }
     const result = await booikingDetailModel.createBookingDetail(
       booking_id,
-      seat_id,
-      showtime_id,
+      ticket_id,
+      price,
     );
     res.status(201).json(result);
   } catch (error) {

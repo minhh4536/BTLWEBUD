@@ -1,75 +1,61 @@
 const bookingModel = require("../models/booking.model");
-const { v4: uuidv4 } = require("uuid");
 
-async function createBooking(req, res) {
-  try {
-    const { user_id, showtime_id, total_amount } = req.body;
-    const booking_code = uuidv4();
-    const result = await bookingModel.createBooking(
-      user_id,
-      booking_code,
-      showtime_id,
-      total_amount,
-    );
-    res.status(201).json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
+const bookingController = {
+  // Tạo booking mới
+  createBooking: async (req, res) => {
+    try {
+      const user_id = req.user.userId;
+      const { showtime_id, ticket_ids, payment_method = "cash" } = req.body;
 
-async function getAllBookings(req, res) {
-  try {
-    const bookings = await bookingModel.getAllBookings();
-    res.status(200).json(bookings);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
+      if (
+        !showtime_id ||
+        !Array.isArray(ticket_ids) ||
+        ticket_ids.length === 0
+      ) {
+        return res.status(400).json({
+          message: "Thiếu thông tin bắt buộc: showtime_id, ticket_ids (mảng)",
+        });
+      }
 
-async function getBookingById(req, res) {
-  try {
-    const { id } = req.params;
-    const booking = await bookingModel.getBookingById(id);
-    if (!booking) {
-      return res.status(404).json({ error: "Booking not found" });
+      const result = await bookingModel.createBooking(
+        user_id,
+        showtime_id,
+        ticket_ids,
+        payment_method,
+      );
+
+      res.status(201).json({
+        message: "Đặt vé thành công",
+        ...result,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(400).json({ message: error.message });
     }
-    res.status(200).json(booking);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
+  },
 
-async function updateBooking(req, res) {
-  try {
-    const { id } = req.params;
-    const { user_id, booking_code, showtime_id, total_amount } = req.body;
-    const result = await bookingModel.updateBooking(
-      id,
-      user_id,
-      booking_code,
-      showtime_id,
-      total_amount,
-    );
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
+  // Lấy chi tiết booking + danh sách vé
+  getBookingWithDetails: async (req, res) => {
+    try {
+      const booking = await bookingModel.getBookingWithDetails(req.params.id);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
 
-async function deleteBooking(req, res) {
-  try {
-    const { id } = req.params;
-    const result = await bookingModel.deleteBooking(id);
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
+      if (
+        String(req.user.role).toLowerCase() !== "admin" &&
+        booking.user_id !== req.user.userId
+      ) {
+        return res
+          .status(403)
+          .json({ message: "Bạn không có quyền xem booking này" });
+      }
 
-module.exports = {
-  createBooking,
-  getAllBookings,
-  getBookingById,
-  updateBooking,
-  deleteBooking,
+      res.json(booking);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
 };
+
+module.exports = bookingController;

@@ -1,14 +1,31 @@
 "use client";
-
+import { useEffect, useState } from "react";
+import { getAllGenres } from "@/services/genreService";
 import "bootstrap/dist/css/bootstrap.min.css";
 import BootstrapClient from "@/components/BootstrapClient";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "../globals.css";
+
+type Genre = {
+  genre_id: number;
+  genre_name: string;
+};
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [genres, setGenres] = useState<Genre[]>([]);
+  useEffect(() => {
+    try {
+      getAllGenres().then((data) => {
+        setGenres(data);
+      });
+    } catch (err) {
+      console.error("Failed to fetch genres:", err);
+    }
+  }, []);
   return (
     <html lang="en">
       <head>
@@ -62,6 +79,30 @@ export default function RootLayout({
                           Movie is showing
                         </a>
                       </li>
+                    </ul>
+                  </li>
+
+                  <li className="nav-item dropdown">
+                    <a
+                      className="nav-link dropdown-toggle"
+                      href="#"
+                      role="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      Genres
+                    </a>
+                    <ul className="dropdown-menu">
+                      {genres.map((genre) => (
+                        <li key={genre.genre_id}>
+                          <a
+                            className="dropdown-item"
+                            href={`/genres/${genre.genre_id}`}
+                          >
+                            {genre.genre_name}
+                          </a>
+                        </li>
+                      ))}
                     </ul>
                   </li>
 

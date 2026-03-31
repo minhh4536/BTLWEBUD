@@ -1,6 +1,10 @@
+DROP DATABASE IF EXISTS movie_booking;
 CREATE DATABASE movie_booking;
 USE movie_booking;
 
+-- ==========================================
+-- 1. QUẢN LÝ NGƯỜI DÙNG & PHÂN QUYỀN
+-- ==========================================
 CREATE TABLE UserRoles (
     role_id INT AUTO_INCREMENT PRIMARY KEY,
     role_name VARCHAR(50) NOT NULL UNIQUE,
@@ -12,9 +16,9 @@ CREATE TABLE Users (
     role_id INT NOT NULL,
     username VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    email VARCHAR(100),
     status ENUM('active','inactive') DEFAULT 'active',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
     FOREIGN KEY (role_id) REFERENCES UserRoles(role_id)
 );
 
@@ -23,16 +27,31 @@ CREATE TABLE UserProfiles (
     user_id INT NOT NULL UNIQUE,
     full_name VARCHAR(150),
     phone VARCHAR(15),
-    email VARCHAR(100),
     date_of_birth DATE,
     gender ENUM('male','female','other'),
-    
-    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
 
+-- ==========================================
+-- 2. QUẢN LÝ PHIM & THÔNG TIN LIÊN QUAN
+-- ==========================================
 CREATE TABLE Genres (
     genre_id INT AUTO_INCREMENT PRIMARY KEY,
-    genre_name VARCHAR(100) NOT NULL UNIQUE
+    genre_name VARCHAR(100) NOT NULL UNIQUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Actors (
+    actor_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    avatar VARCHAR(255),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Directors (
+    director_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE Movies (
@@ -42,17 +61,39 @@ CREATE TABLE Movies (
     duration INT NOT NULL,
     release_date DATE,
     country VARCHAR(100),
-    director VARCHAR(150),
-    actors TEXT,
     poster VARCHAR(255),
     trailer_url VARCHAR(255),
-    genre_id INT,
     status ENUM('coming','showing','ended') DEFAULT 'coming',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (genre_id) REFERENCES Genres(genre_id)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE Movie_Genres (
+    movie_id INT,
+    genre_id INT,
+    PRIMARY KEY (movie_id, genre_id),
+    FOREIGN KEY (movie_id) REFERENCES Movies(movie_id) ON DELETE CASCADE,
+    FOREIGN KEY (genre_id) REFERENCES Genres(genre_id) ON DELETE CASCADE
+);
+
+CREATE TABLE Movie_Actors (
+    movie_id INT,
+    actor_id INT,
+    PRIMARY KEY (movie_id, actor_id),
+    FOREIGN KEY (movie_id) REFERENCES Movies(movie_id) ON DELETE CASCADE,
+    FOREIGN KEY (actor_id) REFERENCES Actors(actor_id) ON DELETE CASCADE
+);
+
+CREATE TABLE Movie_Directors (
+    movie_id INT,
+    director_id INT,
+    PRIMARY KEY (movie_id, director_id),
+    FOREIGN KEY (movie_id) REFERENCES Movies(movie_id) ON DELETE CASCADE,
+    FOREIGN KEY (director_id) REFERENCES Directors(director_id) ON DELETE CASCADE
+);
+
+-- ==========================================
+-- 3. QUẢN LÝ RẠP, PHÒNG & GHẾ
+-- ==========================================
 CREATE TABLE Theaters (
     theater_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
@@ -67,21 +108,30 @@ CREATE TABLE Rooms (
     room_name VARCHAR(100) NOT NULL,
     total_seats INT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (theater_id) REFERENCES Theaters(theater_id) ON DELETE CASCADE
+);
 
-    FOREIGN KEY (theater_id) REFERENCES Theaters(theater_id)
+CREATE TABLE SeatTypes (
+    seat_type_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) UNIQUE, -- Thêm UNIQUE để tránh trùng loại ghế
+    surcharge DECIMAL(10,2) DEFAULT 0
 );
 
 CREATE TABLE Seats (
     seat_id INT AUTO_INCREMENT PRIMARY KEY,
     room_id INT NOT NULL,
     seat_number VARCHAR(10) NOT NULL,
-    seat_type ENUM('normal','vip') DEFAULT 'normal',
+    seat_type_id INT,
+    status ENUM('active', 'maintenance', 'hidden') DEFAULT 'active',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    UNIQUE (room_id, seat_number),
-    FOREIGN KEY (room_id) REFERENCES Rooms(room_id)
+    FOREIGN KEY (room_id) REFERENCES Rooms(room_id) ON DELETE CASCADE,
+    FOREIGN KEY (seat_type_id) REFERENCES SeatTypes(seat_type_id),
+    CONSTRAINT unique_seat_room UNIQUE (room_id, seat_number) -- Ràng buộc UNIQUE cho ghế
 );
 
+-- ==========================================
+-- 4. SUẤT CHIẾU & VÉ (TỐI ƯU CASCADE)
+-- ==========================================
 CREATE TABLE Showtimes (
     showtime_id INT AUTO_INCREMENT PRIMARY KEY,
     movie_id INT NOT NULL,
@@ -90,13 +140,26 @@ CREATE TABLE Showtimes (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     format ENUM('2D','3D','IMAX') DEFAULT '2D',
-    price DECIMAL(10,2) NOT NULL,
+    price DECIMAL(10,2) NOT NULL, 
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (movie_id) REFERENCES Movies(movie_id),
-    FOREIGN KEY (room_id) REFERENCES Rooms(room_id)
+    FOREIGN KEY (movie_id) REFERENCES Movies(movie_id) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES Rooms(room_id) ON DELETE CASCADE
 );
 
+CREATE TABLE Tickets (
+    ticket_id INT AUTO_INCREMENT PRIMARY KEY,
+    showtime_id INT NOT NULL,
+    seat_id INT NOT NULL,
+    price DECIMAL(10,2) NOT NULL, -- Giá vé thực tế
+    status ENUM('available','reserved','sold') DEFAULT 'available',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_tickets_showtimes FOREIGN KEY (showtime_id) REFERENCES Showtimes(showtime_id) ON DELETE CASCADE,
+    FOREIGN KEY (seat_id) REFERENCES Seats(seat_id) ON DELETE CASCADE
+);
+
+-- ==========================================
+-- 5. ĐẶT VÉ & THANH TOÁN (TỐI ƯU CỘT)
+-- ==========================================
 CREATE TABLE Bookings (
     booking_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -105,7 +168,6 @@ CREATE TABLE Bookings (
     total_amount DECIMAL(10,2) NOT NULL,
     booking_status ENUM('pending','paid','cancelled') DEFAULT 'pending',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
     FOREIGN KEY (user_id) REFERENCES Users(user_id),
     FOREIGN KEY (showtime_id) REFERENCES Showtimes(showtime_id)
 );
@@ -113,13 +175,10 @@ CREATE TABLE Bookings (
 CREATE TABLE BookingDetails (
     booking_detail_id INT AUTO_INCREMENT PRIMARY KEY,
     booking_id INT NOT NULL,
-    seat_id INT NOT NULL,
-	showtime_id INT NOT NULL,
-    UNIQUE (booking_id, seat_id),
-    UNIQUE (showtime_id, seat_id),
-    FOREIGN KEY (booking_id) REFERENCES Bookings(booking_id),
-    FOREIGN KEY (seat_id) REFERENCES Seats(seat_id),
-    FOREIGN KEY (showtime_id) REFERENCES Showtimes(showtime_id)
+    ticket_id INT NOT NULL,
+    price DECIMAL(10,2), -- Chỉ giữ lại ticket_id, seat/showtime lấy qua ticket
+    FOREIGN KEY (booking_id) REFERENCES Bookings(booking_id) ON DELETE CASCADE,
+    FOREIGN KEY (ticket_id) REFERENCES Tickets(ticket_id)
 );
 
 CREATE TABLE Payments (
@@ -129,93 +188,48 @@ CREATE TABLE Payments (
     payment_status ENUM('pending','success','failed') DEFAULT 'pending',
     transaction_code VARCHAR(100),
     payment_date DATETIME,
-    
-    FOREIGN KEY (booking_id) REFERENCES Bookings(booking_id)
+    FOREIGN KEY (booking_id) REFERENCES Bookings(booking_id) ON DELETE CASCADE
 );
 
-# Dữ liệu mẫu 
-select * from Users;
-select * from UserProfiles;
+CREATE TABLE Banners (
+    banner_id INT AUTO_INCREMENT PRIMARY KEY, 
+    image VARCHAR(500),
+    link VARCHAR(500),
+    status TINYINT(1),
+    sort_order INT, 
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP 
+);
 
-INSERT INTO UserRoles (role_name, description) VALUES
-('admin', 'Quản trị hệ thống, toàn quyền'),
-('staff', 'Nhân viên rạp, quản lý vé và thanh toán'),
-('customer', 'Khách hàng đặt vé');
+-- ==========================================
+-- 6. STORED PROCEDURE (SỬA LỖI LOGIC)
+-- ==========================================
+DELIMITER $$
 
-INSERT INTO Users (role_id, username, password) VALUES
-(1, 'admin', '123456'),
-(2, 'staff01', '123456'),
-(3, 'customer01', '123456');
+CREATE PROCEDURE GenerateTickets(IN p_showtime_id INT)
+BEGIN
+    DECLARE v_room_id INT;
+    DECLARE v_base_price DECIMAL(10,2);
+    
+    -- Lấy thông tin phòng và giá gốc từ suất chiếu
+    SELECT room_id, price INTO v_room_id, v_base_price 
+    FROM Showtimes 
+    WHERE showtime_id = p_showtime_id;
 
-INSERT INTO UserProfiles (user_id, full_name, phone, email, gender) VALUES
-(1, 'Administrator', '0900000000', 'admin@movie.com', 'male'),
-(2, 'Nguyen Van Staff', '0900000001', 'staff@movie.com', 'male'),
-(3, 'Tran Thi Customer', '0900000002', 'customer@gmail.com', 'female');
+    -- Tự động tạo vé cho tất cả ghế active trong phòng đó
+    INSERT INTO Tickets (showtime_id, seat_id, price, status)
+    SELECT 
+        p_showtime_id, 
+        s.seat_id, 
+        (v_base_price + st.surcharge), 
+        'available'
+    FROM Seats s
+    JOIN SeatTypes st ON s.seat_type_id = st.seat_type_id
+    WHERE s.room_id = v_room_id 
+      AND s.status = 'active';
+      
+END $$
 
-INSERT INTO Genres (genre_name) VALUES
-('Hành động'),
-('Kinh dị'),
-('Tình cảm');
+DELIMITER ;
 
-INSERT INTO Movies 
-(title, description, duration, release_date, country, director, actors, poster, trailer_url, genre_id, status)
-VALUES
-('Avengers: Endgame', 'Biệt đội siêu anh hùng cứu thế giới', 180, '2019-04-26', 'USA', 
-'Anthony Russo', 'Robert Downey Jr, Chris Evans', 
-'avengers.jpg', 'https://youtube.com/trailer1', 1, 'showing'),
+select * from Seattypes
 
-('The Nun', 'Ác quỷ Valak quay trở lại', 120, '2023-10-10', 'USA',
-'Michael Chaves', 'Taissa Farmiga', 
-'nun.jpg', 'https://youtube.com/trailer2', 2, 'showing');
-
-INSERT INTO Theaters (name, address, phone) VALUES
-('CGV Vincom', 'Vincom Plaza, Hà Nội', '0241234567');
-
-INSERT INTO Rooms (theater_id, room_name, total_seats) VALUES
-(1, 'Phòng 1', 20);
-
-INSERT INTO Seats (room_id, seat_number, seat_type) VALUES
-(1,'A1','normal'),
-(1,'A2','normal'),
-(1,'A3','normal'),
-(1,'A4','normal'),
-(1,'A5','vip'),
-(1,'A6','vip'),
-(1,'A7','normal'),
-(1,'A8','normal'),
-(1,'A9','normal'),
-(1,'A10','normal'),
-
-(1,'B1','normal'),
-(1,'B2','normal'),
-(1,'B3','normal'),
-(1,'B4','normal'),
-(1,'B5','vip'),
-(1,'B6','vip'),
-(1,'B7','normal'),
-(1,'B8','normal'),
-(1,'B9','normal'),
-(1,'B10','normal');
-
-INSERT INTO Showtimes 
-(movie_id, room_id, show_date, start_time, end_time, format, price)
-VALUES
-(1, 1, '2026-03-05', '18:00:00', '21:00:00', '2D', 100000),
-(2, 1, '2026-03-05', '21:30:00', '23:30:00', '2D', 90000);
-
-
-
-
-
-ALTER TABLE Users
-ADD COLUMN email VARCHAR(100) UNIQUE AFTER username;
-
-UPDATE Users u
-JOIN UserProfiles p ON u.user_id = p.user_id
-SET u.email = p.email;
-
-ALTER TABLE Users
-MODIFY email VARCHAR(100) NOT NULL UNIQUE;
-
-ALTER TABLE Users
-MODIFY email VARCHAR(100) NOT NULL UNIQUE;

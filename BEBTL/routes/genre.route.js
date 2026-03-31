@@ -1,10 +1,27 @@
 const express = require("express");
 const router = express.Router();
 const genreController = require("../controllers/genre.controller");
+const { verifyToken, checkRole } = require("../middlewares/auth.middleware");
 
-router.post("/create", genreController.createGenre);
 router.get("/", genreController.getAllGenres);
-router.put("/:id", genreController.updateGenre);
-router.delete("/:id", genreController.deleteGenre);
-router.get("/search/:name", genreController.getGenreByName);
+router.get("/:id", genreController.getGenreById);
+router.post(
+  "/",
+  verifyToken,
+  checkRole(["admin"]),
+  genreController.createGenre,
+);
+router.put(
+  "/:id",
+  verifyToken,
+  checkRole(["admin"]),
+  genreController.updateGenre,
+);
+router.delete(
+  "/:id",
+  verifyToken,
+  checkRole(["admin"]),
+  genreController.deleteGenre,
+);
+
 module.exports = router;

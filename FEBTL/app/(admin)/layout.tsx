@@ -37,12 +37,27 @@ export default function AdminLayout({
               className="col-md-2 bg-dark
              text-white min-vh-100 d-none d-md-block w-30"
             >
-              <h4 className="p-3 ">Admin</h4>
+              <h4 className="p-3 fs-1 text-center">Admin</h4>
 
-              <ul className="nav flex-column  p-2">
+              <ul className="nav flex-column  p-2 fs-4">
                 <li className="nav-item admin-btnmenu ">
                   <a className="nav-link text-white" href="/dashboard">
                     <i className="fa-solid fa-chart-line"></i> Dashboard
+                  </a>
+                </li>
+                <li className="nav-item admin-btnmenu ">
+                  <a className="nav-link text-white" href="/banner">
+                    <i className="fa-solid fa-image"></i> Banners
+                  </a>
+                </li>
+                <li className="nav-item admin-btnmenu ">
+                  <a className="nav-link text-white" href="/bookings">
+                    <i className="fa-solid fa-ticket"></i> Bookings
+                  </a>
+                </li>
+                <li className="nav-item admin-btnmenu ">
+                  <a className="nav-link text-white" href="/showtimes">
+                    <i className="fa-solid fa-calendar"></i> Showtimes
                   </a>
                 </li>
                 <li className="nav-item admin-btnmenu ">
